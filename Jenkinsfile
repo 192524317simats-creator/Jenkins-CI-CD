@@ -1,27 +1,23 @@
-
 pipeline {
     agent any
 
     stages {
         stage('Build') {
             steps {
-                echo 'Building Docker image...'
-                bat 'docker build -t jenkins-cicd-app .'
+                sh 'docker build -t jenkins-cicd-app .'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Testing application files...'
-                bat 'if exist index.html (echo HTML file found) else (exit /b 1)'
+                sh 'docker run --rm jenkins-cicd-app cat /usr/share/nginx/html/index.html | grep "Jenkins CI/CD Pipeline"'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-                bat 'docker rm -f jenkins-cicd-app'
-                bat 'docker run -d -p 8082:80 --name jenkins-cicd-app jenkins-cicd-app'
+                sh 'docker rm -f jenkins-cicd-app || true'
+                sh 'docker run -d --restart unless-stopped -p 8082:80 --name jenkins-cicd-app jenkins-cicd-app'
             }
         }
     }
